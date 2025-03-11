@@ -1,3 +1,9 @@
+--- Write a solution to calculate the total spending by users on each Friday of every week in November 2023.
+--- If there are no purchases on a particular Friday of a week, it will be considered as 0.
+
+
+
+
 -- Step 1: Create a recursive CTE 'T' to generate all dates in November 2023
 WITH RECURSIVE T AS (
     -- Base Case: Start from November 1, 2023
