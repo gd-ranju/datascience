@@ -1,0 +1,48 @@
+WITH RECURSIVE
+    -- CTE to generate employee hierarchy levels
+    EmployeeHierarchy AS (
+        -- Base case: Start with the top-level managers (those with no manager)
+        SELECT
+            employee_id,
+            employee_name,
+            0 AS hierarchy_level,   -- Top-level managers have a hierarchy level of 0
+            manager_id,
+            salary
+        FROM Employees
+        WHERE manager_id IS NULL
+        
+        UNION ALL
+        
+        -- Recursive case: For each manager, find their subordinates (employees who report to them)
+        SELECT
+            e.employee_id,
+            e.employee_name,
+            hierarchy_level + 1 AS hierarchy_level,  -- Subordinates have a hierarchy level 1 higher than their manager
+            e.manager_id,
+            e.salary
+        FROM
+            EmployeeHierarchy t  -- Referencing the CTE itself (recursive part)
+            JOIN Employees e ON t.employee_id = e.manager_id  -- Join employees with their managers
+    ),
+    
+    -- CTE to get the salary of the top-level manager(s) (employees who have no manager)
+    TopManagerSalary AS (
+        SELECT salary
+        FROM Employees
+        WHERE manager_id IS NULL  -- Top-level managers have no manager (manager_id is NULL)
+    )
+
+-- Final SELECT statement to retrieve the data
+SELECT
+    employee_id AS subordinate_id,  -- The employee (subordinate) ID
+    employee_name AS subordinate_name,  -- The employee (subordinate) name
+    hierarchy_level,  -- The hierarchy level in the organization (0 for top-level managers, higher for subordinates)
+    t.salary - p.salary AS salary_difference  -- The salary difference between the subordinate and the top-level manager(s)
+FROM
+    EmployeeHierarchy t  -- Referencing the EmployeeHierarchy CTE for employee data
+    JOIN TopManagerSalary p  -- Referencing the TopManagerSalary CTE to get the salary of the top-level managers
+WHERE
+    hierarchy_level != 0  -- Exclude the top-level managers (we are only interested in subordinates)
+ORDER BY 
+    hierarchy_level,  -- Order the results by hierarchy level
+    subordinate_id;  -- Then, order by the subordinate's employee ID
