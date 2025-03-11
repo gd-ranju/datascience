@@ -1,0 +1,21 @@
+-- Step 1: Create a recursive CTE 'T' to generate all dates in November 2023
+WITH RECURSIVE T AS (
+    -- Base Case: Start from November 1, 2023
+    SELECT '2023-11-01' AS purchase_date
+    UNION
+    -- Recursive Case: Increment date by 1 day until reaching November 30, 2023
+    SELECT purchase_date + INTERVAL 1 DAY
+    FROM T
+    WHERE purchase_date < '2023-11-30'
+)
+
+-- Step 2: Aggregate purchase data for each Friday in November 2023
+SELECT
+    CEIL(DAYOFMONTH(purchase_date) / 7) AS week_of_month,  -- Determine week number within the month
+    purchase_date,
+    IFNULL(SUM(amount_spend), 0) AS total_amount  -- Sum purchases on that date (default to 0 if no purchases)
+FROM T
+LEFT JOIN Purchases USING (purchase_date)  -- Join with purchases data
+WHERE DAYOFWEEK(purchase_date) = 6  -- Filter only Fridays (DAYOFWEEK() returns 6 for Friday)
+GROUP BY purchase_date  -- Group by date
+ORDER BY week_of_month;  -- Sort by week number
