@@ -1,3 +1,9 @@
+--- Write an SQL query to find the total number of users and the total amount spent using mobile only,
+--- desktop only and both mobile and desktop together for each date.
+
+
+
+
 -- Step 1: Create a CTE 'P' to generate all possible platform categories for each spending date
 WITH P AS (
     -- Select distinct spend dates and associate them with platform categories
@@ -5,7 +11,8 @@ WITH P AS (
     UNION
     SELECT DISTINCT spend_date, 'mobile' FROM Spending
     UNION
-    SELECT DISTINCT spend_date, 'both' FROM Spending
+
+SELECT DISTINCT spend_date, 'both' FROM Spending
 ),
 
 -- Step 2: Create a CTE 'T' to aggregate user spending per day and determine platform type
