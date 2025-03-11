@@ -1,0 +1,31 @@
+-- Step 1: Create a CTE 'P' to generate all possible platform categories for each spending date
+WITH P AS (
+    -- Select distinct spend dates and associate them with platform categories
+    SELECT DISTINCT spend_date, 'desktop' AS platform FROM Spending
+    UNION
+    SELECT DISTINCT spend_date, 'mobile' FROM Spending
+    UNION
+    SELECT DISTINCT spend_date, 'both' FROM Spending
+),
+
+-- Step 2: Create a CTE 'T' to aggregate user spending per day and determine platform type
+T AS (
+    SELECT
+        user_id,
+        spend_date,
+        SUM(amount) AS amount,  -- Calculate total spending per user per day
+        -- Determine if a user used only one platform or both
+        IF(COUNT(DISTINCT platform) = 1, MIN(platform), 'both') AS platform
+    FROM Spending
+    GROUP BY user_id, spend_date
+)
+
+-- Step 3: Join the platform mapping (P) with the aggregated spending data (T)
+SELECT
+    p.*,  -- Select spend_date and platform from the platform mapping table
+    IFNULL(SUM(t.amount), 0) AS total_amount,  -- Compute total amount spent per platform per day
+    COUNT(t.user_id) AS total_users  -- Count the number of users for each platform per day
+FROM P AS p
+LEFT JOIN T AS t 
+    USING (spend_date, platform)  -- Match by spend_date and platform category
+GROUP BY p.spend_date, p.platform;  -- Group results by date and platform
