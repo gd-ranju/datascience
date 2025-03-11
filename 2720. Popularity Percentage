@@ -1,0 +1,17 @@
+WITH
+    Friendships AS (
+        SELECT * FROM Friends
+        UNION
+        SELECT user2, user1 FROM Friends
+    ),
+    TotalUsersCount AS (
+        SELECT COUNT(DISTINCT user1) AS cnt FROM Friendships
+    )
+SELECT DISTINCT
+    user1,
+    ROUND(
+        (COUNT(1) OVER (PARTITION BY user1)) * 100 / (SELECT cnt FROM TotalUsersCount),
+        2
+    ) AS percentage_popularity
+FROM Friendships
+ORDER BY 1;
