@@ -1,0 +1,13 @@
+-- Select distinct user pairs (user1_id, user2_id) who are friends
+SELECT DISTINCT f.user1_id, f.user2_id
+FROM Friendship AS f
+-- Join Listens table to find songs listened by user1
+LEFT JOIN Listens AS l1 ON f.user1_id = l1.user_id
+-- Join Listens table again to find songs listened by user2
+LEFT JOIN Listens AS l2 ON f.user2_id = l2.user_id
+-- Ensure both users listened to the same song on the same day
+WHERE l1.song_id = l2.song_id AND l1.day = l2.day
+-- Group by user pairs and the day
+GROUP BY f.user1_id, f.user2_id, l1.day
+-- Keep only pairs who listened to at least 3 common songs on the same day
+HAVING COUNT(DISTINCT l1.song_id) >= 3;
