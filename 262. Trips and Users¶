@@ -1,0 +1,14 @@
+-- Select the request date and compute the cancellation rate
+SELECT
+    request_at AS Day,  -- Extract the day of the trip request
+    ROUND(AVG(status != 'completed'), 2) AS 'Cancellation Rate'  -- Calculate the percentage of non-completed trips
+FROM
+    Trips AS t
+    -- Ensure the client is not banned
+    JOIN Users AS u1 ON (t.client_id = u1.users_id AND u1.banned = 'No')
+    -- Ensure the driver is not banned
+    JOIN Users AS u2 ON (t.driver_id = u2.users_id AND u2.banned = 'No')
+-- Filter for the requested date range
+WHERE request_at BETWEEN '2013-10-01' AND '2013-10-03'
+-- Group by each day to compute daily cancellation rates
+GROUP BY request_at;
