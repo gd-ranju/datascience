@@ -1,0 +1,53 @@
+WITH RECURSIVE
+    -- Generate months from 1 to 12
+    Months AS (
+        SELECT 1 AS month
+        UNION ALL
+        SELECT month + 1
+        FROM Months
+        WHERE month < 12
+    ),
+    
+    -- Get active drivers for each month, considering their join date
+    ActiveDrivers AS (
+        SELECT
+            m.month,  -- Month from the Months CTE
+            d.driver_id,  -- Driver ID
+            d.join_date  -- Driver's join date
+        FROM
+            Months AS m
+            LEFT JOIN Drivers AS d
+                -- Include drivers who joined before 2020 or joined in 2020 up to the current month
+                ON YEAR(d.join_date) < 2020
+                OR (YEAR(d.join_date) = 2020 AND MONTH(d.join_date) <= m.month)
+    ),
+    
+    -- Get accepted rides in 2020 for each driver
+    AcceptedRidesPerMonth AS (
+        SELECT
+            a.driver_id,  -- Driver who accepted the ride
+            r.requested_at  -- Date when the ride was requested
+        FROM
+            Rides AS r
+            JOIN AcceptedRides AS a USING (ride_id)
+        WHERE YEAR(r.requested_at) = 2020  -- Filter for rides requested in 2020
+    )
+
+-- Main query to calculate the percentage of active drivers who accepted at least one ride
+SELECT
+    m.month,  -- Month for the current record
+    -- Calculate the working percentage of active drivers who accepted rides
+    IFNULL(
+        ROUND(COUNT(DISTINCT ar.driver_id) * 100 / COUNT(DISTINCT ad.driver_id), 2),
+        0
+    ) AS working_percentage
+FROM
+    Months AS m  -- Join the Months CTE to get the month numbers
+    LEFT JOIN ActiveDrivers AS ad  -- Join the active drivers for each month
+        ON ad.month = m.month
+    LEFT JOIN AcceptedRidesPerMonth AS ar  -- Join the accepted rides for each driver
+        ON ad.driver_id = ar.driver_id
+        AND ad.join_date <= ar.requested_at  -- Ensure the driver joined before the ride was requested
+        AND ad.month = MONTH(ar.requested_at)  -- Match the month of the ride
+GROUP BY m.month  -- Group by month to get the working percentage for each month
+ORDER BY m.month;  -- Order the result by month (1 to 12)
