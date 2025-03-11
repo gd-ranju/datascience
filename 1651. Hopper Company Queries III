@@ -1,33 +1,47 @@
-# Write your MySQL query statement below
+-- Define a recursive Common Table Expression (CTE) to generate months from 1 to 12
 WITH RECURSIVE
     Months AS (
+        -- Start with month 1
         SELECT 1 AS month
         UNION ALL
+        -- Recursively generate months until month 12
         SELECT month + 1
         FROM Months
         WHERE month < 12
     ),
+    
+    -- Define another CTE to calculate the total ride distance and duration for each month
     Ride AS (
         SELECT
-            month,
+            month,  -- Month for the current record
+            -- Sum the ride distances for each month (if no ride, it will be 0)
             SUM(IFNULL(ride_distance, 0)) AS ride_distance,
+            -- Sum the ride durations for each month (if no ride, it will be 0)
             SUM(IFNULL(ride_duration, 0)) AS ride_duration
         FROM
             Months AS m
+            -- Join the Months table with Rides on the month and year of requested_at
             LEFT JOIN Rides AS r ON month = MONTH(requested_at) AND YEAR(requested_at) = 2020
+            -- Join the AcceptedRides table to count only accepted rides
             LEFT JOIN AcceptedRides AS a ON r.ride_id = a.ride_id
+        -- Group by month to get the totals for each month
         GROUP BY month
     )
+-- Final query to select ride information and calculate the rolling average of ride distance and duration
 SELECT
-    month,
+    month,  -- Month for the current record
+    -- Calculate the rolling average of ride distance over the next 3 months (current and next 2 months)
     ROUND(
         AVG(ride_distance) OVER (ROWS BETWEEN CURRENT ROW AND 2 FOLLOWING),
         2
     ) AS average_ride_distance,
+    -- Calculate the rolling average of ride duration over the next 3 months (current and next 2 months)
     ROUND(
         AVG(ride_duration) OVER (ROWS BETWEEN CURRENT ROW AND 2 FOLLOWING),
         2
     ) AS average_ride_duration
 FROM Ride
+-- Order the results by month to see the data from January to December
 ORDER BY month
+-- Limit the results to the first 10 months (this will show data for the first 10 months only)
 LIMIT 10;
