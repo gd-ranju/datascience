@@ -1,0 +1,14 @@
+-- Select employee_id and count overlapping shifts
+SELECT
+    t1.employee_id,
+    COUNT(*) AS overlapping_shifts
+FROM EmployeeShifts t1
+-- Self-join to find overlapping shifts for the same employee
+JOIN EmployeeShifts t2
+    ON t1.employee_id = t2.employee_id  -- Ensure same employee
+    AND t1.start_time < t2.start_time  -- Prevent duplicate counting
+    AND t1.end_time > t2.start_time  -- Overlapping condition
+GROUP BY t1.employee_id
+-- Ensure only employees with overlapping shifts are included
+HAVING COUNT(*) > 0
+ORDER BY t1.employee_id;
