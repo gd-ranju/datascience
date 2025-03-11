@@ -1,0 +1,26 @@
+WITH
+-- CTE that combines both user1 -> user2 and user2 -> user1 as friendship pairs
+cte_all_users AS (
+    -- Select user1_id as user_id and user2_id as their friend from the Friendship table
+    select user1_id as user_id, user2_id as friend from Friendship
+    union
+    -- Select user2_id as user_id and user1_id as their friend from the Friendship table
+    select user2_id as user_id, user1_id as friend from Friendship
+)
+
+-- Main query to find the pages a user’s friend likes but the user themselves hasn’t liked
+select distinct
+    a.user_id,       -- Select the original user
+    b.page_id,       -- Select the page that was liked by the friend
+    count(a.friend) as friends_likes -- Count the number of friends who like the page
+from cte_all_users a
+-- Join Likes table to find the pages that the friend (a.friend) liked
+join Likes b on b.user_id = a.friend
+
+-- Left join with Likes again to find pages where both the user and their friend liked
+left join Likes c on c.user_id = a.user_id and b.page_id = c.page_id
+-- Filter out the pages where both user and friend liked the page
+where c.page_id is null  -- This ensures the page was liked by the friend but not by the user
+
+-- Group the results by user_id and page_id to get the count of friend likes for each page
+group by a.user_id, b.page_id
