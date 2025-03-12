@@ -1,3 +1,7 @@
+
+Write a solution to report the IDs of the missing subtasks for each task_id.
+
+
 WITH RECURSIVE
     T(task_id, subtask_id) AS (
         -- Base case: Start with the task_id and the maximum subtask_id (subtasks_count) for each task
