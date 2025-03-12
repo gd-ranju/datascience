@@ -1,22 +1,29 @@
-WITH
-  RankedOrders AS (
+WITH RankedOrders AS (
+    -- Assign a rank to each order per seller based on order_date
     SELECT
-      Orders.seller_id,
-      RANK() OVER(
-        PARTITION BY Orders.seller_id
-        ORDER BY Orders.order_date
-      ) AS `rank`,
-      Items.item_brand
+        Orders.seller_id,
+        RANK() OVER (
+            PARTITION BY Orders.seller_id -- Partition by seller to rank their orders separately
+            ORDER BY Orders.order_date     -- Rank based on order date (earliest first)
+        ) AS `rank`,
+        Items.item_brand
     FROM Orders
+    -- Join Orders with Items to get the brand of each ordered item
     INNER JOIN Items
-      USING (item_id)
-  )
+        USING (item_id)
+)
+
 SELECT
-  user_id AS seller_id,
-  CASE
-    WHEN Users.favorite_brand = RankedOrders.item_brand THEN 'yes'
-    ELSE 'no'
-  END AS 2nd_item_fav_brand
+    -- Retrieve user_id as seller_id
+    user_id AS seller_id,
+    
+    -- Check if the seller's second-ranked order's item brand matches their favorite brand
+    CASE
+        WHEN Users.favorite_brand = RankedOrders.item_brand THEN 'yes'
+        ELSE 'no'
+    END AS 2nd_item_fav_brand
+
 FROM Users
+-- Perform a LEFT JOIN to include all users, even if they have no ranked orders
 LEFT JOIN RankedOrders
-  ON (Users.user_id = RankedOrders.seller_id AND RankedOrders.`rank` = 2);
+    ON (Users.user_id = RankedOrders.seller_id AND RankedOrders.`rank` = 2);
