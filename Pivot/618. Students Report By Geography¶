@@ -1,14 +1,16 @@
-WITH
-  StudentWithIdInContinent AS (
+WITH StudentWithIdInContinent AS (
+    -- Assign a unique row number to each student within their continent, sorted alphabetically
     SELECT
-      *,
-      ROW_NUMBER() OVER(PARTITION BY continent ORDER BY name) AS id
+        name,
+        continent,
+        ROW_NUMBER() OVER (PARTITION BY continent ORDER BY name) AS id
     FROM Student
-  )
+)
 SELECT
-  MAX(CASE WHEN continent = 'America' THEN name END) AS America,
-  MAX(CASE WHEN continent = 'Asia' THEN name END) AS Asia,
-  MAX(CASE WHEN continent = 'Europe' THEN name END) AS Europe,
-  id
+    -- Pivot the table by assigning student names to their respective continent columns
+    MAX(CASE WHEN continent = 'America' THEN name END) AS America,
+    MAX(CASE WHEN continent = 'Asia' THEN name END) AS Asia,
+    MAX(CASE WHEN continent = 'Europe' THEN name END) AS Europe
 FROM StudentWithIdInContinent
+-- Ensure students are grouped based on their row number to align them properly
 GROUP BY id;
