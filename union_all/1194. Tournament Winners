@@ -1,3 +1,11 @@
+The winner in each group is the player who scored the maximum total points within the group. In the case of a tie, the lowest player_id wins.
+
+Write a solution to find the winner in each group.
+
+Return the result table in any order.
+
+
+
 -- Step 1: Combine scores for both first and second players in each match
 WITH PlayerScores AS (
     SELECT first_player AS player_id, first_score AS score, group_id
