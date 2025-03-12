@@ -4,26 +4,28 @@ WITH T AS (
         student_id,
         -- Rank students in ascending order of score (lowest score gets rank 1)
         RANK() OVER (
-            PARTITION BY exam_id
-            ORDER BY score
+            PARTITION BY exam_id  -- Partition by exam_id so the ranking restarts for each exam
+            ORDER BY score        -- Order by score in ascending order, so the lowest score gets rank 1
         ) AS rk1,
+        
         -- Rank students in descending order of score (highest score gets rank 1)
         RANK() OVER (
-            PARTITION BY exam_id
-            ORDER BY score DESC
+            PARTITION BY exam_id  -- Partition by exam_id for each exam
+            ORDER BY score DESC   -- Order by score in descending order, so the highest score gets rank 1
         ) AS rk2
-    FROM Exam
+    FROM Exam  -- Exam table contains the student_id, exam_id, and score data
 )
 
+-- Main query to get student names and their ranks
 SELECT 
-    student_id, 
-    student_name
+    student_id,  -- Select student_id to identify the students
+    student_name -- Select student_name from the Student table
 FROM T
--- Join with Student table to get student names
+-- Join with Student table to get the corresponding student names
 JOIN Student USING (student_id)
--- Group by student_id to check their ranks across all exams
+-- Group by student_id to apply the HAVING clause for filtering out students based on ranks
 GROUP BY student_id
--- Filter out students who were never ranked at the top (rk1 = 1) or bottom (rk2 = 1)
+-- HAVING clause filters out students who were ranked at the top (rk1 = 1) or bottom (rk2 = 1) in any exam
 HAVING SUM(rk1 = 1) = 0 AND SUM(rk2 = 1) = 0
--- Order by student_id for a structured output
+-- Order by student_id to return a structured and ordered output
 ORDER BY student_id;
