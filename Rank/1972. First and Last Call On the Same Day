@@ -17,7 +17,7 @@ cte2 AS (
     MIN(time) AS first_call_time,  -- Earliest call time of the day
     MAX(time) AS last_call_time    -- Latest call time of the day
     FROM cte1
-    GROUP BY caller_id, date
+    GROUP BY caller_id, date  -- Group by caller_id and date to handle per-user daily calls
 ),
 
 cte3 AS (
@@ -39,6 +39,6 @@ cte3 AS (
 
 -- Select users whose first and last call recipients are the same
 SELECT DISTINCT
-caller_id AS user_id
+caller_id AS user_id  -- Select the unique user who called the same person first and last
 FROM cte3
-WHERE first_call_recipient = last_call_recipient;
+WHERE first_call_recipient = last_call_recipient;  -- Filter where the first and last call recipient are the same
