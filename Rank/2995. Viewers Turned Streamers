@@ -1,22 +1,27 @@
 WITH
+  -- FirstSessions: Rank sessions for each user based on their session start time
   FirstSessions AS (
     SELECT
       user_id,
       session_type,
-      RANK() OVER(PARTITION BY user_id ORDER BY session_start) AS session_rank
+      RANK() OVER(PARTITION BY user_id ORDER BY session_start) AS session_rank  -- Rank sessions per user based on session_start
     FROM Sessions
   ),
+  
+  -- ViewerFirst: Identify users who had a 'Viewer' session as their first session
   ViewerFirst AS (
     SELECT user_id
     FROM FirstSessions
-    WHERE session_rank = 1 AND session_type = 'Viewer'
+    WHERE session_rank = 1 AND session_type = 'Viewer'  -- Filter for users whose first session was a 'Viewer' type
   )
+  
+-- Main query: Count the number of 'Streamer' sessions for each user whose first session was 'Viewer'
 SELECT
   Sessions.user_id,
-  COUNT(*) AS sessions_count
+  COUNT(*) AS sessions_count  -- Count 'Streamer' sessions for each user
 FROM Sessions
 INNER JOIN ViewerFirst
-  USING (user_id)
-WHERE Sessions.session_type = 'Streamer'
-GROUP BY 1
-ORDER BY sessions_count DESC, Sessions.user_id DESC;
+  USING (user_id)  -- Join with ViewerFirst to filter users whose first session was 'Viewer'
+WHERE Sessions.session_type = 'Streamer'  -- Only count 'Streamer' sessions
+GROUP BY 1  -- Group by user_id
+ORDER BY sessions_count DESC, Sessions.user_id DESC;  -- Sort by session count and user_id
