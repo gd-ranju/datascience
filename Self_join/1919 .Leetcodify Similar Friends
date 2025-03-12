@@ -1,3 +1,12 @@
+Write a solution to report the similar friends of Leetcodify users. A user x and user y are similar friends if:
+
+Users x and y are friends, and
+Users x and y listened to the same three or more different songs on the same day.
+Return the result table in any order. Note that you must return the similar pairs of friends the same way they were represented in the input (i.e., always user1_id < user2_id).
+
+
+
+
 -- Select distinct user pairs (user1_id, user2_id) who are friends
 SELECT DISTINCT f.user1_id, f.user2_id
 FROM Friendship AS f
