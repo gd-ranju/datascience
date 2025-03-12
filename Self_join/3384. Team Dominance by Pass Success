@@ -1,3 +1,13 @@
+Write a solution to calculate the dominance score for each team in both halves of the match. The rules are as follows:
+
+A match is divided into two halves: first half (00:00-45:00 minutes) and second half (45:01-90:00 minutes)
+The dominance score is calculated based on successful and intercepted passes:
+When pass_to is a player from the same team: +1 point
+When pass_to is a player from the opposing team (interception): -1 point
+A higher dominance score indicates better passing performance
+Return the result table ordered by team_name and half_number in ascending order.
+
+
 -- Create a Common Table Expression (CTE) to calculate dominance based on passes
 WITH PassDominance AS (
     SELECT
