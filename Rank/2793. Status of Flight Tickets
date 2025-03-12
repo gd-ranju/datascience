@@ -3,13 +3,13 @@ SELECT
   -- Determine if the passenger gets a confirmed seat or is placed on the waitlist
   IF(
     RANK() OVER(
-      PARTITION BY Passengers.flight_id
-      ORDER BY Passengers.booking_time  -- Rank passengers based on booking time
-    ) <= Flights.capacity,  -- Compare rank with flight capacity
-    'Confirmed',  -- If within capacity, status is 'Confirmed'
-    'Waitlist'    -- Otherwise, status is 'Waitlist'
+      PARTITION BY Passengers.flight_id  -- Partition by flight_id to rank passengers per flight
+      ORDER BY Passengers.booking_time  -- Rank passengers based on booking time (earliest first)
+    ) <= Flights.capacity,  -- Compare the rank with the flight's capacity
+    'Confirmed',  -- If the rank is within the flight's capacity, the status is 'Confirmed'
+    'Waitlist'    -- Otherwise, the passenger is placed on the 'Waitlist'
   ) AS status
 FROM Passengers
 INNER JOIN Flights
-  USING (flight_id)  -- Join Flights table to get the capacity for each flight
-ORDER BY 1;  -- Order by passenger_id for better readability
+  USING (flight_id)  -- Join with the Flights table to access the flight's capacity
+ORDER BY 1;  -- Order by passenger_id to display results in ascending order of passenger_id
