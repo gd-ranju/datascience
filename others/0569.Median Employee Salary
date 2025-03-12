@@ -1,0 +1,22 @@
+-- Defining the CTE (t) to calculate row numbers and count of employees per company
+WITH
+    t AS (
+        SELECT
+            *,  -- Select all columns from Employee table
+            -- Assigning row number partitioned by company and ordered by salary (ascending)
+            ROW_NUMBER() OVER (
+                PARTITION BY company
+                ORDER BY salary ASC
+            ) AS rk,
+            -- Counting the total number of employees per company
+            COUNT(id) OVER (PARTITION BY company) AS n
+        FROM Employee
+    )
+-- Main query to select the middle salary or salaries of each company
+SELECT
+    id,
+    company,
+    salary
+FROM t
+-- Filtering to get the middle salary employees (if even number, both middle salaries)
+WHERE rk >= n / 2 AND rk <= n / 2 + 1;
