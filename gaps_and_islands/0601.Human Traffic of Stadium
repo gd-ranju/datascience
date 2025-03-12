@@ -1,0 +1,25 @@
+WITH
+    StadiumTrafficGroups AS (
+        -- Create a CTE to group consecutive records of stadium traffic by calculating a difference (rk) 
+        -- between the ID and its row number. This helps identify consecutive stadium visits with significant people traffic.
+        SELECT
+            *,
+            id - (ROW_NUMBER() OVER (ORDER BY id)) AS rk  -- rk serves as a group identifier for consecutive traffic events
+        FROM Stadium
+        WHERE people >= 100  -- Only consider records where human traffic is greater than or equal to 100 people
+    ),
+    ConsecutiveTraffic AS (
+        -- Create a CTE to count the number of consecutive visits in each group (based on rk)
+        SELECT
+            *,
+            COUNT(1) OVER (PARTITION BY rk) AS cnt  -- Count the number of visits in each group of consecutive traffic
+        FROM StadiumTrafficGroups
+    )
+-- Final SELECT to retrieve records where there are at least 3 consecutive visits with significant traffic
+SELECT 
+    id, 
+    visit_date, 
+    people
+FROM ConsecutiveTraffic
+WHERE cnt >= 3  -- Only include groups with at least 3 consecutive visits
+ORDER BY 1;  -- Order the result by id (or the first column, which is 'id')
