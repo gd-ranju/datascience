@@ -1,0 +1,24 @@
+WITH
+    TransactionWithGap AS (
+        -- Calculate the "island" group by subtracting the row number from transaction date
+        SELECT
+            customer_id,
+            transaction_date,
+            DATEDIFF(transaction_date, 
+                DATE_SUB(transaction_date, INTERVAL ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY transaction_date) DAY)) AS gap_group
+        FROM Transactions
+    ),
+    ConsecutiveTransactions AS (
+        -- Group by customer_id and gap_group to count the number of consecutive transactions
+        SELECT 
+            customer_id, 
+            gap_group, 
+            COUNT(*) AS cnt
+        FROM TransactionWithGap
+        GROUP BY customer_id, gap_group
+    )
+-- Find the customer_id with the longest streak of consecutive transactions
+SELECT customer_id
+FROM ConsecutiveTransactions
+WHERE cnt = (SELECT MAX(cnt) FROM ConsecutiveTransactions)
+ORDER BY customer_id;
