@@ -1,0 +1,28 @@
+WITH
+    EmployeeSalaries AS (
+        -- Create a CTE to calculate the sum of salary over the last 2 months for each employee
+        -- PARTITION BY id ensures the calculation is done for each employee individually
+        -- ORDER BY month ensures the months are ordered for the sum calculation
+        -- RANGE 2 PRECEDING limits the sum to the current and the previous 2 months
+        SELECT
+            id,
+            month,
+            SUM(salary) OVER (
+                PARTITION BY id
+                ORDER BY month
+                RANGE 2 PRECEDING
+            ) AS salary,  -- Calculate sum of salary over the previous 2 months for each employee
+            RANK() OVER (
+                PARTITION BY id
+                ORDER BY month DESC
+            ) AS rk  -- Rank the records by month in descending order, giving the most recent month the highest rank
+        FROM Employee
+    )
+-- Select the employee records where the rank is greater than 1 (i.e., excluding the most recent record)
+SELECT 
+    id, 
+    month, 
+    salary
+FROM EmployeeSalaries
+WHERE rk > 1  -- Exclude the most recent record for each employee
+ORDER BY 1, 2 DESC;  -- Order by employee id and month in descending order
