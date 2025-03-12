@@ -1,14 +1,23 @@
-SELECT
-  Items.item_category AS Category,
-  SUM(IF(WEEKDAY(Orders.order_date) = 0, Orders.quantity, 0)) AS Monday,
-  SUM(IF(WEEKDAY(Orders.order_date) = 1, Orders.quantity, 0)) AS Tuesday,
-  SUM(IF(WEEKDAY(Orders.order_date) = 2, Orders.quantity, 0)) AS Wednesday,
-  SUM(IF(WEEKDAY(Orders.order_date) = 3, Orders.quantity, 0)) AS Thursday,
-  SUM(IF(WEEKDAY(Orders.order_date) = 4, Orders.quantity, 0)) AS Friday,
-  SUM(IF(WEEKDAY(Orders.order_date) = 5, Orders.quantity, 0)) AS Saturday,
-  SUM(IF(WEEKDAY(Orders.order_date) = 6, Orders.quantity, 0)) AS Sunday
+SELECT 
+    -- Select the item category as 'Category' in the output
+    Items.item_category AS Category,
+
+    -- Sum the quantity of orders placed on each specific weekday
+    SUM(IF(WEEKDAY(Orders.order_date) = 0, Orders.quantity, 0)) AS Monday,
+    SUM(IF(WEEKDAY(Orders.order_date) = 1, Orders.quantity, 0)) AS Tuesday,
+    SUM(IF(WEEKDAY(Orders.order_date) = 2, Orders.quantity, 0)) AS Wednesday,
+    SUM(IF(WEEKDAY(Orders.order_date) = 3, Orders.quantity, 0)) AS Thursday,
+    SUM(IF(WEEKDAY(Orders.order_date) = 4, Orders.quantity, 0)) AS Friday,
+    SUM(IF(WEEKDAY(Orders.order_date) = 5, Orders.quantity, 0)) AS Saturday,
+    SUM(IF(WEEKDAY(Orders.order_date) = 6, Orders.quantity, 0)) AS Sunday
+
 FROM Items
+-- Perform a LEFT JOIN between Items and Orders using item_id as the key
 LEFT JOIN Orders
-  USING (item_id)
+    USING (item_id)
+
+-- Group results by item category to get aggregated quantities per day per category
 GROUP BY 1
+
+-- Order the output by item category in ascending order
 ORDER BY 1;
