@@ -1,3 +1,13 @@
+A system is running one task every day. Every task is independent of the previous tasks. The tasks can fail or succeed.
+
+Write a solution to report the period_state for each continuous interval of days in the period from 2019-01-01 to 2019-12-31.
+
+period_state is 'failed' if tasks in this interval failed or 'succeeded' if tasks in this interval succeeded. Interval of days are retrieved as start_date and end_date.
+
+Return the result table ordered by start_date.
+
+
+
 -- Common Table Expression (CTE) to combine data from 'Failed' and 'Succeeded' tables
 WITH cte AS (
     -- Selecting fail_date as 'date' from Failed table and labeling it as 'failed'
