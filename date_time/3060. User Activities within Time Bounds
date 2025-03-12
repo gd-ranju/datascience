@@ -1,15 +1,19 @@
 WITH
+  -- SessionDifferences: Calculate the difference in session start time and previous session end time for each user
   SessionDifferences AS (
     SELECT
       user_id,
-      session_start,
+      session_start,  -- Current session start time
+      -- LAG function: Get the end time of the previous session for the same user and session type
       LAG(session_end) OVER(
-        PARTITION BY user_id, session_type
-        ORDER BY session_end
-      ) AS prev_session_end
+        PARTITION BY user_id, session_type  -- Partition by user_id and session_type to compare sessions of the same type
+        ORDER BY session_end  -- Order by session end time to get the correct previous session
+      ) AS prev_session_end  -- Previous session's end time
     FROM Sessions
   )
-SELECT DISTINCT user_id
+  
+-- Main query: Filter users whose previous session's end time was within 12 hours of the current session's start time
+SELECT DISTINCT user_id  -- Select unique user_id who had sessions with short intervals
 FROM SessionDifferences
-WHERE TIMESTAMPDIFF(HOUR, prev_session_end, session_start) <= 12
-ORDER BY 1;
+WHERE TIMESTAMPDIFF(HOUR, prev_session_end, session_start) <= 12  -- Check if the gap between sessions is 12 hours or less
+ORDER BY 1;  -- Order by user_id
