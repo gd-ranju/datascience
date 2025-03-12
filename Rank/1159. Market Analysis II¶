@@ -1,29 +1,30 @@
 WITH RankedOrders AS (
-    -- Assign a rank to each order per seller based on order_date
+    -- Assign a rank to each order per seller based on the order_date
     SELECT
-        Orders.seller_id,
+        Orders.seller_id,  -- Seller ID from the Orders table
         RANK() OVER (
-            PARTITION BY Orders.seller_id -- Partition by seller to rank their orders separately
-            ORDER BY Orders.order_date     -- Rank based on order date (earliest first)
-        ) AS `rank`,
-        Items.item_brand
+            PARTITION BY Orders.seller_id  -- Partition by seller to rank their orders separately
+            ORDER BY Orders.order_date     -- Rank based on order_date, with the earliest order getting rank 1
+        ) AS `rank`,  -- Rank assigned to each order
+        Items.item_brand  -- Brand of the item from the Items table
     FROM Orders
-    -- Join Orders with Items to get the brand of each ordered item
+    -- Join the Orders table with the Items table to get the brand of each ordered item
     INNER JOIN Items
-        USING (item_id)
+        USING (item_id)  -- Join on the item_id to combine order details with item details
 )
 
+-- Main query to fetch seller info and their second order's brand status
 SELECT
-    -- Retrieve user_id as seller_id
+    -- Retrieve user_id as seller_id (since user_id represents the seller)
     user_id AS seller_id,
     
     -- Check if the seller's second-ranked order's item brand matches their favorite brand
     CASE
-        WHEN Users.favorite_brand = RankedOrders.item_brand THEN 'yes'
-        ELSE 'no'
+        WHEN Users.favorite_brand = RankedOrders.item_brand THEN 'yes'  -- If the favorite brand matches, return 'yes'
+        ELSE 'no'  -- Otherwise, return 'no'
     END AS 2nd_item_fav_brand
 
 FROM Users
--- Perform a LEFT JOIN to include all users, even if they have no ranked orders
+-- Perform a LEFT JOIN to include all users, even if they don't have a second-ranked order
 LEFT JOIN RankedOrders
-    ON (Users.user_id = RankedOrders.seller_id AND RankedOrders.`rank` = 2);
+    ON (Users.user_id = RankedOrders.seller_id AND RankedOrders.`rank` = 2);  -- Join only the second-ranked order for each seller
