@@ -1,0 +1,22 @@
+-- Defining the first CTE (ProductDetails) to join Purchases and Products tables
+WITH
+    ProductDetails AS (
+        SELECT *
+        FROM
+            Purchases
+            JOIN Products USING (product_id)
+    ),
+    -- Defining the second CTE (HighestInvoice) to calculate the total amount per invoice and select the highest
+    HighestInvoice AS (
+        SELECT invoice_id, SUM(price * quantity) AS amount
+        FROM ProductDetails
+        GROUP BY invoice_id
+        ORDER BY 2 DESC, 1
+        LIMIT 1
+    )
+-- Main query to fetch product_id, quantity, and total price for the selected invoice
+SELECT product_id, quantity, (quantity * price) AS price
+FROM
+    ProductDetails
+    -- Joining the result of the second CTE (HighestInvoice) to filter by the highest invoice amount
+    JOIN HighestInvoice USING (invoice_id);
