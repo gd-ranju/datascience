@@ -1,29 +1,43 @@
 WITH cte1 AS (
+    -- Normalize the call data by treating both incoming and outgoing calls equally
     SELECT caller_id, recipient_id,
     DATE(call_time) AS date, TIME(call_time) AS time
     FROM Calls 
     UNION 
+    -- Swap caller_id and recipient_id to ensure bidirectional calls are included
     SELECT recipient_id AS caller_id, caller_id AS recipient_id,
     DATE(call_time) AS date, TIME(call_time) AS time
     FROM Calls
 ),
+
 cte2 AS (
+    -- Find the first and last call times for each user per day
     SELECT
     caller_id, date,
-    MIN(time) AS first_call_time,
-    MAX(time) AS last_call_time
+    MIN(time) AS first_call_time,  -- Earliest call time of the day
+    MAX(time) AS last_call_time    -- Latest call time of the day
     FROM cte1
     GROUP BY caller_id, date
 ),
+
 cte3 AS (
+    -- Identify the recipients of the first and last calls
     SELECT
     cte2.caller_id, cte2.date,
-    a.recipient_id AS first_call_recipient,
-    b.recipient_id AS last_call_recipient
+    a.recipient_id AS first_call_recipient,  -- Recipient of the first call
+    b.recipient_id AS last_call_recipient    -- Recipient of the last call
     FROM cte2
-    LEFT JOIN cte1 a ON a.caller_id = cte2.caller_id AND a.date = cte2.date AND a.time = cte2.first_call_time
-    LEFT JOIN cte1 b ON b.caller_id = cte2.caller_id AND b.date = cte2.date AND b.time = cte2.last_call_time
+    LEFT JOIN cte1 a 
+      ON a.caller_id = cte2.caller_id 
+      AND a.date = cte2.date 
+      AND a.time = cte2.first_call_time  -- Join to get the first call recipient
+    LEFT JOIN cte1 b 
+      ON b.caller_id = cte2.caller_id 
+      AND b.date = cte2.date 
+      AND b.time = cte2.last_call_time   -- Join to get the last call recipient
 )
+
+-- Select users whose first and last call recipients are the same
 SELECT DISTINCT
 caller_id AS user_id
 FROM cte3
