@@ -1,4 +1,13 @@
 -- Define a recursive Common Table Expression (CTE) to generate months from 1 to 12
+
+
+Write a solution to compute the average_ride_distance and average_ride_duration of every 3-month window starting from January - March 2020 to October - December 2020. Round average_ride_distance and average_ride_duration to the nearest two decimal places.
+
+The average_ride_distance is calculated by summing up the total ride_distance values from the three months and dividing it by 3. The average_ride_duration is calculated in a similar way.
+
+Return the result table ordered by month in ascending order, where month is the starting month's number (January is 1, February is 2, etc.).
+
+
 WITH RECURSIVE
     Months AS (
         -- Start with month 1
