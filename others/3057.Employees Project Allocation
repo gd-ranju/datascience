@@ -1,0 +1,24 @@
+-- Defining the CTE to calculate the average workload for each team
+WITH
+    team_avg_workload AS (
+        SELECT team, AVG(workload) AS avg_workload
+        FROM
+            Project
+            JOIN Employees USING (employee_id)
+        GROUP BY team
+    )
+-- Main query to select employee details and workloads above the average for each team
+SELECT
+    employee_id,
+    project_id,
+    name AS employee_name,
+    workload AS project_workload
+FROM
+    Project
+    JOIN Employees USING (employee_id)
+    -- Joining the CTE to compare the employee's workload with the team average workload
+    JOIN team_avg_workload USING (team)
+-- Filtering to only include employees with workload greater than the average for their team
+WHERE workload > avg_workload
+-- Sorting the results by employee_id and project_id
+ORDER BY 1, 2;
