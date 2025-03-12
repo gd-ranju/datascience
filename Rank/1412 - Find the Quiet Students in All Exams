@@ -1,22 +1,29 @@
-# Write your MySQL query statement below
-WITH
-    T AS (
-        SELECT
-            student_id,
-            RANK() OVER (
-                PARTITION BY exam_id
-                ORDER BY score
-            ) AS rk1,
-            RANK() OVER (
-                PARTITION BY exam_id
-                ORDER BY score DESC
-            ) AS rk2
-        FROM Exam
-    )
-SELECT student_id, student_name
-FROM
-    T
-    JOIN Student USING (student_id)
-GROUP BY 1
+WITH T AS (
+    -- Assign ranks to students in each exam based on their scores
+    SELECT
+        student_id,
+        -- Rank students in ascending order of score (lowest score gets rank 1)
+        RANK() OVER (
+            PARTITION BY exam_id
+            ORDER BY score
+        ) AS rk1,
+        -- Rank students in descending order of score (highest score gets rank 1)
+        RANK() OVER (
+            PARTITION BY exam_id
+            ORDER BY score DESC
+        ) AS rk2
+    FROM Exam
+)
+
+SELECT 
+    student_id, 
+    student_name
+FROM T
+-- Join with Student table to get student names
+JOIN Student USING (student_id)
+-- Group by student_id to check their ranks across all exams
+GROUP BY student_id
+-- Filter out students who were never ranked at the top (rk1 = 1) or bottom (rk2 = 1)
 HAVING SUM(rk1 = 1) = 0 AND SUM(rk2 = 1) = 0
-ORDER BY 1;
+-- Order by student_id for a structured output
+ORDER BY student_id;
