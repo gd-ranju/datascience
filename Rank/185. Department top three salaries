@@ -1,14 +1,18 @@
-WITH employee_department AS
-    (
-    SELECT d.id, 
+WITH employee_department AS (
+    -- Assign rank to employees within each department based on their salary
+    SELECT 
+        d.id, 
         d.name AS Department, 
-        salary AS Salary, 
+        e.salary AS Salary, 
         e.name AS Employee, 
-        DENSE_RANK()OVER(PARTITION BY d.id ORDER BY salary DESC) AS rnk
+        -- Rank employees by salary within each department (highest first)
+        DENSE_RANK() OVER(PARTITION BY d.id ORDER BY e.salary DESC) AS rnk
     FROM Department d
     JOIN Employee e
     ON d.id = e.departmentId
-    )
+)
+
+-- Select top 3 highest-paid employees per department
 SELECT Department, Employee, Salary
 FROM employee_department
-WHERE rnk <= 3
+WHERE rnk <= 3;
