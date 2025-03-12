@@ -1,0 +1,30 @@
+WITH cte1 AS (
+    SELECT caller_id, recipient_id,
+    DATE(call_time) AS date, TIME(call_time) AS time
+    FROM Calls 
+    UNION 
+    SELECT recipient_id AS caller_id, caller_id AS recipient_id,
+    DATE(call_time) AS date, TIME(call_time) AS time
+    FROM Calls
+),
+cte2 AS (
+    SELECT
+    caller_id, date,
+    MIN(time) AS first_call_time,
+    MAX(time) AS last_call_time
+    FROM cte1
+    GROUP BY caller_id, date
+),
+cte3 AS (
+    SELECT
+    cte2.caller_id, cte2.date,
+    a.recipient_id AS first_call_recipient,
+    b.recipient_id AS last_call_recipient
+    FROM cte2
+    LEFT JOIN cte1 a ON a.caller_id = cte2.caller_id AND a.date = cte2.date AND a.time = cte2.first_call_time
+    LEFT JOIN cte1 b ON b.caller_id = cte2.caller_id AND b.date = cte2.date AND b.time = cte2.last_call_time
+)
+SELECT DISTINCT
+caller_id AS user_id
+FROM cte3
+WHERE first_call_recipient = last_call_recipient;
