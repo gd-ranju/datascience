@@ -1,0 +1,18 @@
+WITH CustomerOrders AS (
+    SELECT
+        customer_id,
+        YEAR(order_date) AS order_year,
+        SUM(price) AS total_spent,
+        YEAR(order_date) - RANK() OVER (
+            PARTITION BY customer_id
+            ORDER BY SUM(price)
+        ) AS rank_difference
+    FROM Orders
+    GROUP BY customer_id, YEAR(order_date)
+)
+SELECT
+    customer_id
+FROM
+    CustomerOrders
+GROUP BY customer_id
+HAVING COUNT(DISTINCT rank_difference) = 1;
