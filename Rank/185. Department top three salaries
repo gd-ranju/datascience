@@ -1,18 +1,21 @@
 WITH employee_department AS (
     -- Assign rank to employees within each department based on their salary
     SELECT 
-        d.id, 
-        d.name AS Department, 
-        e.salary AS Salary, 
-        e.name AS Employee, 
+        d.id,  -- Department ID from the Department table
+        d.name AS Department,  -- Department name from the Department table
+        e.salary AS Salary,  -- Employee's salary from the Employee table
+        e.name AS Employee,  -- Employee's name from the Employee table
         -- Rank employees by salary within each department (highest first)
         DENSE_RANK() OVER(PARTITION BY d.id ORDER BY e.salary DESC) AS rnk
-    FROM Department d
-    JOIN Employee e
-    ON d.id = e.departmentId
+        -- DENSE_RANK() is used to assign a rank to each employee within their department
+        -- The highest salary gets rank 1, and ties get the same rank without skipping numbers
+    FROM Department d  -- From the Department table
+    JOIN Employee e  -- Join with the Employee table
+    ON d.id = e.departmentId  -- Join condition: match department IDs between the tables
 )
 
 -- Select top 3 highest-paid employees per department
 SELECT Department, Employee, Salary
 FROM employee_department
+-- Filter to include only employees with a rank of 3 or lower (top 3 highest salaries per department)
 WHERE rnk <= 3;
