@@ -1,22 +1,25 @@
 WITH RankedUserActivity AS (
-    -- Rank user activities based on the most recent endDate
+    -- Rank user activities based on the most recent endDate (most recent activities first)
     SELECT
         *,
-        -- Count the total number of activities per username
-        COUNT(*) OVER(PARTITION BY username) AS `count`,
-        -- Assign a rank based on the latest endDate (most recent first)
+        -- Count the total number of activities per username to track users with multiple activities
+        COUNT(*) OVER(PARTITION BY username) AS `count`, 
+        -- Assign a rank to each activity for a user, ordered by endDate in descending order
         RANK() OVER(
-            PARTITION BY username 
-            ORDER BY endDate DESC
+            PARTITION BY username  -- Partition by username so that the ranking restarts for each user
+            ORDER BY endDate DESC  -- Rank based on the most recent endDate (latest activity gets rank 1)
         ) AS `rank`
-    FROM UserActivity
+    FROM UserActivity  -- Use the UserActivity table to get the data
 )
 
+-- Main query to retrieve relevant activities
 SELECT
-    username,
-    activity,
-    startDate,
-    endDate
+    username,  -- Select the username for reference
+    activity,  -- Select the activity that the user engaged in
+    startDate,  -- Select the start date of the activity
+    endDate     -- Select the end date of the activity
 FROM RankedUserActivity
--- Include users who have only one activity OR the second most recent activity for users with multiple activities
+-- Filter to get users who either:
+-- 1. Have only one activity, or
+-- 2. Have multiple activities and we want the second most recent activity (rank = 2)
 WHERE `count` = 1 OR `rank` = 2;
