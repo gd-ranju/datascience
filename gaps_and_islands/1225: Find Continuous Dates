@@ -1,0 +1,29 @@
+-- Common Table Expression (CTE) to combine data from 'Failed' and 'Succeeded' tables
+WITH cte AS (
+    -- Selecting fail_date as 'date' from Failed table and labeling it as 'failed'
+    SELECT fail_date AS date, 'failed' AS state FROM Failed
+    UNION
+    -- Selecting success_date as 'date' from Succeeded table and labeling it as 'success'
+    SELECT success_date AS date, 'success' AS state FROM Succeeded
+),
+
+-- Second CTE to add a row number for each state (fail or success) ordered by date
+cte2 AS (
+    SELECT *, ROW_NUMBER() OVER (PARTITION BY state ORDER BY date) AS rnk
+    FROM cte
+),
+
+-- Third CTE to calculate a grouping (grp) based on the date and row number
+cte3 AS (
+    SELECT *, DATE_SUB(date, INTERVAL rnk DAY) AS grp
+    FROM cte2
+)
+
+-- Final SELECT query to group by 'state' and find continuous periods for both 'failed' and 'success'
+SELECT 
+    state AS period_state,         -- Period state: 'failed' or 'success'
+    MIN(date) AS start_date,       -- Start date of the period
+    MAX(date) AS end_date          -- End date of the period
+FROM cte3
+WHERE date BETWEEN '2019-01-01' AND '2019-12-31'  -- Filter for the year 2019
+GROUP BY grp, state;            -- Grouping by the 'grp' and 'state' to find continuous dates
