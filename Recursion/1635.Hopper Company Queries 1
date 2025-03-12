@@ -1,3 +1,8 @@
+Write a solution to report the following statistics for each month of 2020:
+
+The number of drivers currently with the Hopper company by the end of the month (active_drivers).
+The number of accepted rides in that month (accepted_rides).
+Return the result table ordered by month in ascending order, where month is the month's number (January is 1, February is 2, etc.).
 
 
 WITH
