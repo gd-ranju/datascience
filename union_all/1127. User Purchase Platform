@@ -1,20 +1,19 @@
--- Step 1: Create a CTE 'Platform_Categories' to define all platform categories for each spending date
+-- Step 1: Define platform categories for each spending date
 WITH Platform_Categories AS (
-    -- Select distinct spend dates and associate them with platform categories
     SELECT DISTINCT spend_date, 'desktop' AS platform FROM Spending
-    UNION
+    UNION ALL
     SELECT DISTINCT spend_date, 'mobile' FROM Spending
-    UNION
+    UNION ALL
     SELECT DISTINCT spend_date, 'both' FROM Spending
 ),
 
--- Step 2: Create a CTE 'User_Spending' to aggregate user spending per day and determine platform type
+-- Step 2: Aggregate user spending per day and determine platform category
 User_Spending AS (
     SELECT
         user_id,
         spend_date,
-        SUM(amount) AS total_spent,  -- Calculate total spending per user per day
-        -- Determine if a user used only one platform or both
+        SUM(amount) AS total_spent,  -- Total amount spent by user per day
+        -- Identify if the user used only one platform or both
         CASE 
             WHEN COUNT(DISTINCT platform) = 1 THEN MIN(platform) 
             ELSE 'both' 
@@ -23,14 +22,15 @@ User_Spending AS (
     GROUP BY user_id, spend_date
 )
 
--- Step 3: Join the platform mapping (Platform_Categories) with the aggregated spending data (User_Spending)
+-- Step 3: Join platform categories with user spending data
 SELECT
-    pc.spend_date,  -- Select spend date
-    pc.platform AS platform_category,  -- Platform type (desktop, mobile, both)
-    COALESCE(SUM(us.total_spent), 0) AS total_amount_spent,  -- Compute total amount spent per platform per day
-    COUNT(us.user_id) AS total_users  -- Count the number of users for each platform per day
+    pc.spend_date,  -- Date of spending
+    pc.platform AS platform_category,  -- Platform category (desktop, mobile, both)
+    COALESCE(SUM(us.total_spent), 0) AS total_amount_spent,  -- Total amount spent per platform per day
+    COUNT(us.user_id) AS total_users  -- Count of users per platform per day
 FROM Platform_Categories AS pc
 LEFT JOIN User_Spending AS us 
-    ON pc.spend_date = us.spend_date AND pc.platform = us.platform_category  -- Match by spend_date and platform category
-GROUP BY pc.spend_date, pc.platform  -- Group results by date and platform
-ORDER BY pc.spend_date, pc.platform;  -- Sort results by date and platform category
+    ON pc.spend_date = us.spend_date 
+    AND pc.platform = us.platform_category  -- Match by date and platform category
+GROUP BY pc.spend_date, pc.platform  -- Aggregate by date and platform category
+ORDER BY pc.spend_date, pc.platform;  -- Sort results for readability
