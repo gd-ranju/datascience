@@ -46,3 +46,49 @@ SELECT
   Converted.converted_text -- Formatted text with proper capitalization
 FROM user_content AS UserContent
 INNER JOIN Converted USING (content_id);
+
+
+
+Explanation with Example
+The query is designed to:
+
+Extract words from a text recursively (one by one).
+Reassemble the words with proper capitalization (first letter uppercase, rest lowercase).
+Example Input Table (user_content)
+content_id	content_text
+1	hello world! this is sql
+2	recursive queries are powerful
+Step 1: Initial Extraction (Words CTE - Base Case)
+The first word is extracted, and the remaining text is stored.
+content_id	word	remaining_text	token_index
+1	hello	world! this is sql	1
+2	recursive	queries are powerful	1
+Step 2: Recursion (Extract Next Word)
+Each iteration extracts the next word, removes it from remaining_text, and increments token_index.
+content_id	word	remaining_text	token_index
+1	hello	world! this is sql	1
+1	world!	this is sql	2
+1	this	is sql	3
+1	is	sql	4
+1	sql	(empty)	5
+2	recursive	queries are powerful	1
+2	queries	are powerful	2
+2	are	powerful	3
+2	powerful	(empty)	4
+Step 3: Capitalization (Converted CTE)
+Each word is capitalized properly (Hello World! This Is Sql).
+The words are reassembled using GROUP_CONCAT.
+content_id	converted_text
+1	Hello World! This Is Sql
+2	Recursive Queries Are Powerful
+Step 4: Final Selection
+The final query joins the original text with the transformed text.
+
+content_id	original_text	converted_text
+1	hello world! this is sql	Hello World! This Is Sql
+2	recursive queries are powerful	Recursive Queries Are Powerful
+Summary
+Recursive CTE extracts words step by step.
+Capitalization is applied after extracting words.
+Final output presents original vs formatted text.
+
