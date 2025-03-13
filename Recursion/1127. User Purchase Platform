@@ -1,38 +1,36 @@
---- Write an SQL query to find the total number of users and the total amount spent using mobile only,
---- desktop only and both mobile and desktop together for each date.
-
-
-
-
--- Step 1: Create a CTE 'P' to generate all possible platform categories for each spending date
-WITH P AS (
+-- Step 1: Create a CTE 'Platform_Categories' to define all platform categories for each spending date
+WITH Platform_Categories AS (
     -- Select distinct spend dates and associate them with platform categories
     SELECT DISTINCT spend_date, 'desktop' AS platform FROM Spending
     UNION
     SELECT DISTINCT spend_date, 'mobile' FROM Spending
     UNION
-
-SELECT DISTINCT spend_date, 'both' FROM Spending
+    SELECT DISTINCT spend_date, 'both' FROM Spending
 ),
 
--- Step 2: Create a CTE 'T' to aggregate user spending per day and determine platform type
-T AS (
+-- Step 2: Create a CTE 'User_Spending' to aggregate user spending per day and determine platform type
+User_Spending AS (
     SELECT
         user_id,
         spend_date,
-        SUM(amount) AS amount,  -- Calculate total spending per user per day
+        SUM(amount) AS total_spent,  -- Calculate total spending per user per day
         -- Determine if a user used only one platform or both
-        IF(COUNT(DISTINCT platform) = 1, MIN(platform), 'both') AS platform
+        CASE 
+            WHEN COUNT(DISTINCT platform) = 1 THEN MIN(platform) 
+            ELSE 'both' 
+        END AS platform_category
     FROM Spending
     GROUP BY user_id, spend_date
 )
 
--- Step 3: Join the platform mapping (P) with the aggregated spending data (T)
+-- Step 3: Join the platform mapping (Platform_Categories) with the aggregated spending data (User_Spending)
 SELECT
-    p.*,  -- Select spend_date and platform from the platform mapping table
-    IFNULL(SUM(t.amount), 0) AS total_amount,  -- Compute total amount spent per platform per day
-    COUNT(t.user_id) AS total_users  -- Count the number of users for each platform per day
-FROM P AS p
-LEFT JOIN T AS t 
-    USING (spend_date, platform)  -- Match by spend_date and platform category
-GROUP BY p.spend_date, p.platform;  -- Group results by date and platform
+    pc.spend_date,  -- Select spend date
+    pc.platform AS platform_category,  -- Platform type (desktop, mobile, both)
+    COALESCE(SUM(us.total_spent), 0) AS total_amount_spent,  -- Compute total amount spent per platform per day
+    COUNT(us.user_id) AS total_users  -- Count the number of users for each platform per day
+FROM Platform_Categories AS pc
+LEFT JOIN User_Spending AS us 
+    ON pc.spend_date = us.spend_date AND pc.platform = us.platform_category  -- Match by spend_date and platform category
+GROUP BY pc.spend_date, pc.platform  -- Group results by date and platform
+ORDER BY pc.spend_date, pc.platform;  -- Sort results by date and platform category
