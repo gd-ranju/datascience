@@ -1,14 +1,25 @@
+
 WITH RECURSIVE Words AS (
     -- Step 1: Extract the first word from content_text and assign a token index.
     SELECT
       content_id,
-      SUBSTRING_INDEX(content_text, ' ', 1) AS word, -- Extract the first word
+      -- Extract the first word from content_text (everything before the first space)
+      SUBSTRING_INDEX(content_text, ' ', 1) AS word,  
+      
+      -- Remove the extracted word from content_text:
+      -- 1. Find the length of the first word using LENGTH(SUBSTRING_INDEX(content_text, ' ', 1)).
+      -- 2. Add 2 to account for the space following the word.
+      -- 3. Use SUBSTRING to get the remaining text after the extracted word.
       SUBSTRING(
         content_text,
-        LENGTH(SUBSTRING_INDEX(content_text, ' ', 1)) + 2 -- Remove extracted word from text
+        LENGTH(SUBSTRING_INDEX(content_text, ' ', 1)) + 2  
       ) AS remaining_text,
-      1 AS token_index -- Initialize token index
+      
+      -- Initialize the token index for the first word.
+      1 AS token_index  
     FROM user_content
+)
+
 
     UNION ALL
 
