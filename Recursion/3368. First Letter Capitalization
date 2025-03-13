@@ -1,0 +1,48 @@
+WITH RECURSIVE Words AS (
+    -- Step 1: Extract the first word from content_text and assign a token index.
+    SELECT
+      content_id,
+      SUBSTRING_INDEX(content_text, ' ', 1) AS word, -- Extract the first word
+      SUBSTRING(
+        content_text,
+        LENGTH(SUBSTRING_INDEX(content_text, ' ', 1)) + 2 -- Remove extracted word from text
+      ) AS remaining_text,
+      1 AS token_index -- Initialize token index
+    FROM user_content
+
+    UNION ALL
+
+    -- Step 2: Recursively extract the next word and increment the token index.
+    SELECT
+      content_id,
+      SUBSTRING_INDEX(remaining_text, ' ', 1) AS word, -- Extract next word
+      SUBSTRING(
+        remaining_text,
+        LENGTH(SUBSTRING_INDEX(remaining_text, ' ', 1)) + 2 -- Remove extracted word
+      ) AS remaining_text,
+      token_index + 1 AS token_index -- Increment token index
+    FROM Words
+    WHERE remaining_text != '' -- Stop recursion when all words are extracted
+),
+Converted AS (
+    -- Step 3: Reconstruct the words in original order with proper capitalization.
+    SELECT
+      content_id,
+      GROUP_CONCAT(
+        CONCAT(
+          UPPER(SUBSTRING(word, 1, 1)), -- Capitalize the first letter
+          LOWER(SUBSTRING(word, 2)) -- Convert the rest to lowercase
+        )
+        ORDER BY token_index SEPARATOR ' ' -- Maintain original word order
+      ) AS converted_text
+    FROM Words
+    GROUP BY content_id
+)
+
+-- Step 4: Select and return the results with original and formatted text.
+SELECT
+  UserContent.content_id,
+  UserContent.content_text AS original_text, -- Original unformatted text
+  Converted.converted_text -- Formatted text with proper capitalization
+FROM user_content AS UserContent
+INNER JOIN Converted USING (content_id);
