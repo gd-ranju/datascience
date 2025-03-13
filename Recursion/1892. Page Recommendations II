@@ -8,30 +8,33 @@ friends_likes: The number of the friends of user_id that like page_id.
 
 
 
-
-WITH
--- CTE that combines both user1 -> user2 and user2 -> user1 as friendship pairs
-cte_all_users AS (
-    -- Select user1_id as user_id and user2_id as their friend from the Friendship table
-    select user1_id as user_id, user2_id as friend from Friendship
-    union
-    -- Select user2_id as user_id and user1_id as their friend from the Friendship table
-    select user2_id as user_id, user1_id as friend from Friendship
+WITH cte_all_users AS (
+    -- Create a symmetric friendship relation, ensuring bidirectional friendship
+    SELECT user1_id AS user_id, user2_id AS friend FROM Friendship
+    UNION
+    SELECT user2_id AS user_id, user1_id AS friend FROM Friendship
 )
 
--- Main query to find the pages a user’s friend likes but the user themselves hasn’t liked
-select distinct
-    a.user_id,       -- Select the original user
-    b.page_id,       -- Select the page that was liked by the friend
-    count(a.friend) as friends_likes -- Count the number of friends who like the page
-from cte_all_users a
--- Join Likes table to find the pages that the friend (a.friend) liked
-join Likes b on b.user_id = a.friend
+SELECT DISTINCT
+    a.user_id,              -- The user for whom the recommendation is generated
+    b.page_id,              -- The page liked by the friend
+    COUNT(a.friend) AS friends_likes  -- Number of friends who like the page
+FROM cte_all_users a
+JOIN Likes b ON b.user_id = a.friend  -- Find pages liked by friends
+LEFT JOIN Likes c 
+    ON c.user_id = a.user_id AND b.page_id = c.page_id  -- Check if the user already liked the page
+WHERE c.page_id IS NULL  -- Exclude pages the user already liked
+GROUP BY a.user_id, b.page_id;
+Key Improvements & Explanation:
+Bidirectional Friendship Handling:
 
--- Left join with Likes again to find pages where both the user and their friend liked
-left join Likes c on c.user_id = a.user_id and b.page_id = c.page_id
--- Filter out the pages where both user and friend liked the page
-where c.page_id is null  -- This ensures the page was liked by the friend but not by the user
+The cte_all_users ensures that friendships are considered in both directions.
+Finding Friend-Liked Pages:
 
--- Group the results by user_id and page_id to get the count of friend likes for each page
-group by a.user_id, b.page_id
+We join the Likes table with the cte_all_users to find pages liked by a user’s friend.
+Excluding Already Liked Pages:
+
+A left join with Likes (aliased as c) ensures we exclude pages that the user has already liked.
+Counting Friends Who Like the Page:
+
+We count the occurrences of friends who have liked each page to determine popularity among friends.
