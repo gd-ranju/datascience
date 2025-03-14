@@ -75,8 +75,8 @@ On 2013-10-03:
 
 -- Select the request date and compute the cancellation rate
 SELECT
-    request_at AS Day,  -- Extract the day of the trip request
-    ROUND(AVG(status != 'completed'), 2) AS 'Cancellation Rate'  -- Calculate the percentage of non-completed trips
+    request_at AS Day,                                                -- Extract the day of the trip request
+    ROUND(AVG(status != 'completed'), 2) AS 'Cancellation Rate'       -- Calculate the percentage of non-completed trips
 FROM
     Trips AS t
     -- Ensure the client is not banned
