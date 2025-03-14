@@ -14,10 +14,7 @@ User_Spending AS (
         spend_date,
         SUM(amount) AS total_spent,  -- Total amount spent by user per day
         -- Identify if the user used only one platform or both
-        CASE 
-            WHEN COUNT(DISTINCT platform) = 1 THEN MIN(platform) 
-            ELSE 'both' 
-        END AS platform_category
+        IF(COUNT(platform) = 1, platform, 'both') AS platform 
     FROM Spending
     GROUP BY user_id, spend_date
 )
