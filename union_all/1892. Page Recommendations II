@@ -74,25 +74,26 @@ WITH cte_all_users AS (
 )
 
 SELECT DISTINCT
-    a.user_id,              -- The user for whom the recommendation is generated
-    b.page_id,              -- The page liked by the friend
-    COUNT(a.friend) AS friends_likes  -- Number of friends who like the page
+    a.user_id,                                                      -- The user for whom the recommendation is generated
+    b.page_id,                                                      -- The page liked by the friend
+    COUNT(a.friend) AS friends_likes                                -- Number of friends who like the page
 FROM cte_all_users a
-JOIN Likes b ON b.user_id = a.friend  -- Find pages liked by friends
+JOIN Likes b ON b.user_id = a.friend                                -- Find pages liked by friends
 LEFT JOIN Likes c 
-    ON c.user_id = a.user_id AND b.page_id = c.page_id  -- Check if the user already liked the page
-WHERE c.page_id IS NULL  -- Exclude pages the user already liked
+    ON c.user_id = a.user_id AND b.page_id = c.page_id              -- Check if the user already liked the page
+WHERE c.page_id IS NULL                                             -- Exclude pages the user already liked
 GROUP BY a.user_id, b.page_id;
+
+
+
+
 Key Improvements & Explanation:
 Bidirectional Friendship Handling:
 
 The cte_all_users ensures that friendships are considered in both directions.
 Finding Friend-Liked Pages:
-
 We join the Likes table with the cte_all_users to find pages liked by a user’s friend.
 Excluding Already Liked Pages:
-
 A left join with Likes (aliased as c) ensures we exclude pages that the user has already liked.
 Counting Friends Who Like the Page:
-
 We count the occurrences of friends who have liked each page to determine popularity among friends.
