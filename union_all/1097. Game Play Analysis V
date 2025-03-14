@@ -15,33 +15,24 @@ Each row is a record of a player who logged in and played a number of games (pos
 
 
 The install date of a player is the first login day of that player.
-
 We define day one retention of some date x to be the number of players whose install date is x and they logged back in on the day right after x, divided by the number of players whose install date is x, rounded to 2 decimal places.
-
 Write a solution to report for each install date, the number of players that installed the game on that day, and the day one retention.
-
 Return the result table in any order.
-
 The result format is in the following example.
 
 
 
-
-# Write your MySQL query statement below
-WITH
-    T AS (
-        SELECT
-            player_id,
-            event_date,
-            MIN(event_date) OVER (PARTITION BY player_id) AS install_dt
-        FROM Activity
-    )
+WITH PlayerInstall AS (  -- CTE to determine the install date for each player
+    SELECT
+        player_id,
+        event_date,
+        MIN(event_date) OVER (PARTITION BY player_id) AS install_dt
+    FROM Activity
+)
 SELECT
-    install_dt,
-    COUNT(DISTINCT player_id) AS installs,
-    ROUND(
-        SUM(DATEDIFF(event_date, install_dt) = 1) / COUNT(DISTINCT player_id),
-        2
-    ) AS day1_retention
-FROM T
-GROUP BY 1;
+    install_dt,  
+    COUNT(DISTINCT player_id) AS installs,  -- Count of unique players who installed on a given date
+    ROUND(SUM(DATEDIFF(event_date, install_dt) = 1) / COUNT(DISTINCT player_id),2) AS day1_retention  -- Players who returned the next day / total installs
+FROM PlayerInstall
+GROUP BY install_dt;
+
