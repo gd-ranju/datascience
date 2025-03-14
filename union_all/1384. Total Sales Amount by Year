@@ -1,38 +1,3 @@
-Table: Product
-
-+---------------+---------+
-| Column Name   | Type    |
-+---------------+---------+
-| product_id    | int     |
-| product_name  | varchar |
-+---------------+---------+
-product_id is the primary key (column with unique values) for this table.
-product_name is the name of the product.
- 
-
-Table: Sales
-
-+---------------------+---------+
-| Column Name         | Type    |
-+---------------------+---------+
-| product_id          | int     |
-| period_start        | date    |
-| period_end          | date    |
-| average_daily_sales | int     |
-+---------------------+---------+
-product_id is the primary key (column with unique values) for this table. 
-period_start and period_end indicate the start and end date for the sales period, and both dates are inclusive.
-The average_daily_sales column holds the average daily sales amount of the items for the period.
-The dates of the sales years are between 2018 to 2020.
- 
-
-Write a solution to report the total sales amount of each item for each year, with corresponding product_name, product_id, report_year, and total_amount.
-Return the result table ordered by product_id and report_year.
-The result format is in the following example.
-
- 
-
-Example 1:
 
 Input: 
 Product table:
@@ -68,29 +33,27 @@ LC T-shirt was sold for the period of 2018-12-01 to 2020-01-01, and there are 31
 LC Keychain was sold for the period of 2019-12-01 to 2020-01-31, and there are 31, 31 days for years 2019 and 2020 respectively.
 
 
-WITH
-  Calendar AS (
-    # We should be given a calendar in hand. Otherwise, assume we are oracle
-    # and already know the testcase.
+
+WITH SalesCalendar AS (  -- CTE to define the yearly calendar range for sales calculations
     SELECT '2018' AS year, '2018-01-01' AS start, '2018-12-31' AS end
     UNION ALL
     SELECT '2019' AS year, '2019-01-01' AS start, '2019-12-31' AS end
     UNION ALL
     SELECT '2020' AS year, '2020-01-01' AS start, '2020-12-31' AS end
-  )
+)
 SELECT
-  Product.product_id,
-  Product.product_name,
-  Calendar.year AS report_year,
-  (
-    DATEDIFF(
-      LEAST(Sales.period_end, Calendar.end),
-      GREATEST(Sales.period_start, Calendar.start)
-    ) + 1
-  ) * Sales.average_daily_sales AS total_amount
-FROM Sales
-INNER JOIN Calendar
-  ON (Calendar.year BETWEEN YEAR(Sales.period_start) AND year(Sales.period_end))
-INNER JOIN Product
-  USING (product_id)
-ORDER BY 1, 3;
+    p.product_id,
+    p.product_name,
+    sc.year AS report_year,  -- The sales report year
+    (
+        DATEDIFF(
+            LEAST(s.period_end, sc.end),  -- Ensuring the period does not exceed the year's end
+            GREATEST(s.period_start, sc.start)  -- Ensuring the period does not start before the year's beginning
+        ) + 1
+    ) * s.average_daily_sales AS total_amount  -- Total sales amount calculation
+FROM Sales s
+INNER JOIN SalesCalendar sc
+    ON (sc.year BETWEEN YEAR(s.period_start) AND YEAR(s.period_end))  -- Filtering sales data that falls within the calendar year range
+INNER JOIN Product p
+    USING (product_id)  -- Joining to fetch product names
+ORDER BY p.product_id, sc.year;
