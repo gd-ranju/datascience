@@ -1,0 +1,25 @@
+WITH Islands AS (
+    -- Assign a group identifier to consecutive numbers by subtracting row_number from num
+    SELECT 
+        num, 
+        category,  
+        num - ROW_NUMBER() OVER (PARTITION BY category ORDER BY num) AS grp_id
+    FROM numbers
+),
+GroupedIslands AS (
+    -- Identify groups with at least N consecutive numbers
+    SELECT category, grp_id
+    FROM Islands
+    GROUP BY category, grp_id
+    HAVING COUNT(*) >= N
+),
+FinalResult AS (
+    -- Get all the records from Islands where the grp_id is part of the valid groups
+    SELECT i.num, i.category
+    FROM Islands i
+    JOIN GroupedIslands gi
+    ON i.category = gi.category AND i.grp_id = gi.grp_id
+)
+SELECT num, category
+FROM FinalResult
+ORDER BY category, num;
