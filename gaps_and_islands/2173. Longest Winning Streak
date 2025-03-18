@@ -1,31 +1,21 @@
-
-# Write your MySQL query statement below
-The winning streak of a player is the number of consecutive wins uninterrupted by draws or losses.
-
-Write a solution to count the longest winning streak for each player.
-
-Return the result table in any order.
-
-
-
-WITH
-    S AS (
-        SELECT
-            *,
-            ROW_NUMBER() OVER (
-                PARTITION BY player_id
-                ORDER BY match_day
-            ) - ROW_NUMBER() OVER (
-                PARTITION BY player_id, result
-                ORDER BY match_day
-            ) AS rk
-        FROM Matches
-    ),
-    T AS (
-        SELECT player_id, SUM(result = 'Win') AS s
-        FROM S
-        GROUP BY player_id, rk
-    )
-SELECT player_id, MAX(s) AS longest_streak
-FROM T
+WITH Streaks AS (
+    -- Identify winning streaks using row number differences
+    SELECT
+        player_id,
+        match_day,
+        result,
+        ROW_NUMBER() OVER (PARTITION BY player_id ORDER BY match_day) -
+        ROW_NUMBER() OVER (PARTITION BY player_id, result ORDER BY match_day) AS rk
+    FROM Matches
+    WHERE result = 'Win' -- Consider only winning matches
+),
+WinningGroups AS (
+    -- Count consecutive wins in each streak
+    SELECT player_id, COUNT(*) AS streak_length
+    FROM Streaks
+    GROUP BY player_id, rk
+)
+-- Get the longest winning streak for each player
+SELECT player_id, MAX(streak_length) AS longest_streak
+FROM WinningGroups
 GROUP BY player_id;
