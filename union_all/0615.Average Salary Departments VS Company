@@ -112,21 +112,21 @@ Return the result table in any order.
 WITH
     SalaryComparison AS (
         SELECT
-            DATE_FORMAT(pay_date, '%Y-%m') AS pay_month,  -- Format pay date as 'YYYY-MM'
+            DATE_FORMAT(pay_date, '%Y-%m') AS pay_month,                                      -- Format pay date as 'YYYY-MM'
             department_id,
-            AVG(amount) OVER (PARTITION BY pay_date) AS company_avg_amount,  -- Company-wide average for each pay date
+            AVG(amount) OVER (PARTITION BY pay_date) AS company_avg_amount,                   -- Company-wide average for each pay date
             AVG(amount) OVER (PARTITION BY pay_date, department_id) AS department_avg_amount  -- Department-specific average for each pay date
         FROM
             Salary AS s
-            JOIN Employee AS e ON s.employee_id = e.employee_id  -- Join Salary table with Employee table to get employee details
+            JOIN Employee AS e ON s.employee_id = e.employee_id                               -- Join Salary table with Employee table to get employee details
     )
 -- Final selection to compare company and department average amounts
 SELECT DISTINCT
     pay_month,
     department_id,
     CASE
-        WHEN company_avg_amount = department_avg_amount THEN 'same'  -- If the averages are equal
-        WHEN company_avg_amount < department_avg_amount THEN 'higher'  -- If company average is lower
-        ELSE 'lower'  -- If company average is higher
+        WHEN company_avg_amount = department_avg_amount THEN 'same'                          -- If the averages are equal
+        WHEN company_avg_amount < department_avg_amount THEN 'higher'                        -- If company average is lower
+        ELSE 'lower'                                                                         -- If company average is higher
     END AS comparison
 FROM SalaryComparison;
