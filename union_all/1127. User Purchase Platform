@@ -43,7 +43,7 @@ User_Spending AS (
     SELECT
         user_id,
         spend_date,
-        SUM(amount) AS total_spent,  -- Total amount spent by user per day
+        SUM(amount) AS total_spent,                      -- Total amount spent by user per day
         -- Identify if the user used only one platform or both
         IF(COUNT(platform) = 1, platform, 'both') AS platform 
     FROM Spending
@@ -52,13 +52,13 @@ User_Spending AS (
 
 -- Step 3: Join platform categories with user spending data
 SELECT
-    pc.spend_date,  -- Date of spending
-    pc.platform AS platform_category,  -- Platform category (desktop, mobile, both)
-    COALESCE(SUM(us.total_spent), 0) AS total_amount_spent,  -- Total amount spent per platform per day
-    COUNT(us.user_id) AS total_users  -- Count of users per platform per day
+    pc.spend_date,                                                   -- Date of spending
+    pc.platform AS platform_category,                                -- Platform category (desktop, mobile, both)
+    COALESCE(SUM(us.total_spent), 0) AS total_amount_spent,          -- Total amount spent per platform per day
+    COUNT(us.user_id) AS total_users                                 -- Count of users per platform per day
 FROM Platform_Categories AS pc
 LEFT JOIN User_Spending AS us 
     ON pc.spend_date = us.spend_date 
-    AND pc.platform = us.platform_category  -- Match by date and platform category
-GROUP BY pc.spend_date, pc.platform  -- Aggregate by date and platform category
-ORDER BY pc.spend_date, pc.platform;  -- Sort results for readability
+    AND pc.platform = us.platform_category                  -- Match by date and platform category
+GROUP BY pc.spend_date, pc.platform                         -- Aggregate by date and platform category
+ORDER BY pc.spend_date, pc.platform;                        -- Sort results for readability
