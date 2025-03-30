@@ -6,10 +6,10 @@ WITH RankedUserActivity AS (
         COUNT(*) OVER(PARTITION BY username) AS `count`, 
         -- Assign a rank to each activity for a user, ordered by endDate in descending order
         RANK() OVER(
-            PARTITION BY username  -- Partition by username so that the ranking restarts for each user
-            ORDER BY endDate DESC  -- Rank based on the most recent endDate (latest activity gets rank 1)
+            PARTITION BY username                         -- Partition by username so that the ranking restarts for each user
+            ORDER BY endDate DESC                         -- Rank based on the most recent endDate (latest activity gets rank 1)
         ) AS `rank`
-    FROM UserActivity  -- Use the UserActivity table to get the data
+    FROM UserActivity                                     -- Use the UserActivity table to get the data
 )
 
 -- Main query to retrieve relevant activities
