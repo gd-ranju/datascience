@@ -1,16 +1,16 @@
 WITH RankedOrders AS (
     -- Assign a rank to each order per seller based on the order_date
     SELECT
-        Orders.seller_id,  -- Seller ID from the Orders table
+        Orders.seller_id,                              -- Seller ID from the Orders table
         RANK() OVER (
-            PARTITION BY Orders.seller_id  -- Partition by seller to rank their orders separately
-            ORDER BY Orders.order_date     -- Rank based on order_date, with the earliest order getting rank 1
-        ) AS `rank`,  -- Rank assigned to each order
-        Items.item_brand  -- Brand of the item from the Items table
+            PARTITION BY Orders.seller_id               -- Partition by seller to rank their orders separately
+            ORDER BY Orders.order_date                  -- Rank based on order_date, with the earliest order getting rank 1
+        ) AS `rank`,                                    -- Rank assigned to each order
+        Items.item_brand                                -- Brand of the item from the Items table
     FROM Orders
-    -- Join the Orders table with the Items table to get the brand of each ordered item
+                                                        -- Join the Orders table with the Items table to get the brand of each ordered item
     INNER JOIN Items
-        USING (item_id)  -- Join on the item_id to combine order details with item details
+        USING (item_id)                                 -- Join on the item_id to combine order details with item details
 )
 
 -- Main query to fetch seller info and their second order's brand status
